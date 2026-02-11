@@ -1,5 +1,5 @@
 {
-    "name": "semitexa",
+    "name": "semitexa/ultimate",
     "description": "Meta-package: full Semitexa stack for a working SSR site (core + frontend + docs)",
     "type": "metapackage",
     "license": "MIT",
