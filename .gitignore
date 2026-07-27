@@ -8,6 +8,7 @@ composer.lock
 # Semitexa runtime
 var/log/*
 var/cache/*
+var/ai-report/*
 !var/log/.gitkeep
 !var/cache/.gitkeep
 .phpunit.result.cache
