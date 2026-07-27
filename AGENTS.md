@@ -14,7 +14,7 @@ The **agent** is the reasoning system (Claude, Codex, Copilot). **Semitexa** is 
 2. **Triage intent before action.** Classify every input as `EXECUTE` / `CAPTURE` / `REFINE`. Never execute what was only proposed.
 3. **Never solve a non-trivial task in a single pass.** Decompose via `ai:epic` + `ai:work`.
 4. **Externalize state.** `ai:epic` / `ai:work` / `ai:trace` are the memory. If it's not in an artifact, it didn't happen.
-4a. **A workaround for a framework defect is half the work.** Directive 4 stops at the project boundary — a consumer's `ai:epic` is never seen by Semitexa. When you work around a Semitexa bug, filing it with `ai:report` is part of the task, not an optional extra. An unrecorded workaround makes the system *look* healthy and guarantees the next agent pays the same cost. Evidence is mandatory: a suspicion without a command and its output is usually your own mistake, not a framework defect.
+   - **4a — A workaround for a framework defect is half the work.** Directive 4 stops at the project boundary — a consumer's `ai:epic` is never seen by Semitexa. When you work around a Semitexa bug, filing it with `ai:report` is part of the task, not an optional extra. An unrecorded workaround makes the system *look* healthy and guarantees the next agent pays the same cost. Evidence is mandatory: a suspicion without a command and its output is usually your own mistake, not a framework defect.
 5. **Epics are the canonical backlog.** Repository documents are never the source of truth.
 6. **Never re-derive what is already written.** Search trace / epic / context before reasoning from scratch.
 7. **Fail early on uncertainty.** Low confidence → clarify. Ambiguous → branch. Don't guess.
