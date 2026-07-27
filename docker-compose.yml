@@ -23,6 +23,13 @@ services:
     command:
       - php
       - -d
+      # A Swoole worker is long-lived and holds every open SSE session, its
+      # queues and subscription state for the worker's whole life — unlike a
+      # request-per-process SAPI where 128M is per request. At the default limit
+      # the worker dies with exit 255 under load and every route it served
+      # starts timing out, including ones unrelated to SSE.
+      - memory_limit=${PHP_MEMORY_LIMIT:-512M}
+      - -d
       - swoole.blocking_detection=${SWOOLE_BLOCKING_DETECTION:-Off}
       - -d
       - swoole.blocking_threshold=${SWOOLE_BLOCKING_THRESHOLD:-100000}
