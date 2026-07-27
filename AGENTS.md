@@ -14,6 +14,7 @@ The **agent** is the reasoning system (Claude, Codex, Copilot). **Semitexa** is 
 2. **Triage intent before action.** Classify every input as `EXECUTE` / `CAPTURE` / `REFINE`. Never execute what was only proposed.
 3. **Never solve a non-trivial task in a single pass.** Decompose via `ai:epic` + `ai:work`.
 4. **Externalize state.** `ai:epic` / `ai:work` / `ai:trace` are the memory. If it's not in an artifact, it didn't happen.
+4a. **A workaround for a framework defect is half the work.** Directive 4 stops at the project boundary — a consumer's `ai:epic` is never seen by Semitexa. When you work around a Semitexa bug, filing it with `ai:report` is part of the task, not an optional extra. An unrecorded workaround makes the system *look* healthy and guarantees the next agent pays the same cost. Evidence is mandatory: a suspicion without a command and its output is usually your own mistake, not a framework defect.
 5. **Epics are the canonical backlog.** Repository documents are never the source of truth.
 6. **Never re-derive what is already written.** Search trace / epic / context before reasoning from scratch.
 7. **Fail early on uncertainty.** Low confidence → clarify. Ambiguous → branch. Don't guess.
@@ -108,6 +109,7 @@ Epic contract: imperative title ≤ 60 chars; one-sentence goal stating outcome;
 | `ai:verify` | Precise lint+test+module-structure subset on diff (see [`MODULE_STRUCTURE.md`](packages/semitexa-docs/docs/MODULE_STRUCTURE.md)) | **After every edit.** Non-negotiable. |
 | `ai:trace` | Durable cross-session event stream | Always. `export SEMITEXA_AI_TRACE_ID=<id>` at task start; `ai:task` / `ai:context` / `ai:plan` / `ai:verify` auto-append. |
 | `ai:backlog` | Stats + hygiene (`status=discarded`, never hard-delete) | Before big renders; on operator request |
+| `ai:report` | File a **framework** defect + the workaround as a Semitexa issue. Requires evidence; searches for duplicates first and adds a sighting instead; drafts locally when `gh` is unavailable so nothing is lost | Whenever you work around a Semitexa bug — see Directive 4a |
 
 ### Read-only introspection — use BEFORE Read/Grep
 
@@ -198,6 +200,7 @@ If an idea isn't in `ai:epic`, it doesn't exist from a backlog standpoint. The f
 
 - Do **not** add root-level directories, change module discovery, or add Composer dependencies without explicit approval.
 - Do **not** create documentation files (`*.md`) unless explicitly requested.
+- Do **not** put the consumer's code, configuration, environment values, or credentials into an `ai:report`. It publishes to a **public** tracker, usually from someone else's machine. A minimal reproduction is the ceiling; the command refuses obvious credential shapes, but that is a backstop, not the rule. Never publish without the operator seeing the rendered issue first.
 - Do **not** add per-module PSR-4 entries to root `composer.json` — modules autoload from `src/modules/`.
 - Do **not** add routes outside a module — `App\` is not discovered for routes.
 - Do **not** treat any document as the backlog (§5). Doc mining is opt-in only.
