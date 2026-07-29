@@ -62,6 +62,11 @@ operator input
 [6] ai:plan --files
      │ └─ risk=high → split; back to [3]
      ▼
+[6b] touching a page, a region, a form or an interaction?
+     │   ai:ask mechanisms --area=ssr|ui
+     │   └─ the framework already does deferred regions, components, live
+     │      transport and UI behaviours. Check BEFORE hand-rolling one.
+     ▼
 [7] edit via make:* or Edit
 [8] ai:verify
      │ └─ fail → ai:work update --status=blocked; iterate (three-strike rule)
@@ -122,7 +127,8 @@ Epic contract: imperative title ≤ 60 chars; one-sentence goal stating outcome;
 | Events + listeners | `ai:ask event [--name=<Event>] --json` |
 | All routes | `routes:list [--json]` |
 | DI bindings | `contracts:list --json` |
-| Capabilities manifest | `ai:ask capabilities --json` |
+| Capabilities manifest — what COMMANDS exist to run | `ai:ask capabilities --json` |
+| What the FRAMEWORK can do — deferred regions, components, live transport, UI behaviours | `ai:ask mechanisms [--area=ssr\|ui] [--id=<cap>] --json` |
 | Logs | `ai:ask logs --grep=<term> --lines=200 [--level=ERROR] --json` |
 
 ### Project graph — structural queries, prefer over Grep
