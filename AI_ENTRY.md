@@ -10,7 +10,7 @@
 |---|---|---|
 | Classify what was asked | `bin/semitexa ai:task "<prose>" --json` | — |
 | Commands that exist | `bin/semitexa ai:ask capabilities --json` | `bin/semitexa` (flat list) |
-| Build a page, region, form or interaction | `bin/semitexa ai:ask mechanisms [--area=ssr\|ui] --json` | — |
+| Build a page, region, form or interaction | `bin/semitexa ai:ask mechanisms --json` (or `--area=ssr` / `--area=ui`) | — |
 | Project / module / route / event | `bin/semitexa ai:ask <project\|module\|route\|event> --json` | Read/Grep |
 | Who uses class `X` | `bin/semitexa ai:review-graph:query --usages=<FQCN> --json` | Grep |
 | Blast radius of a change | `bin/semitexa ai:review-graph:impact <FQCN> --json` | Grep across `packages/**` + `src/**` |

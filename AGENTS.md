@@ -98,7 +98,7 @@ operator input
      │ └─ risk=high → split; back to [3]
      ▼
 [6b] touching a page, a region, a form or an interaction?
-     │   ai:ask mechanisms --area=ssr|ui
+     │   ai:ask mechanisms --json          (narrow with --area=ssr or --area=ui)
      │   └─ the framework already does deferred regions, components, live
      │      transport and UI behaviours. Check BEFORE hand-rolling one.
      ▼
@@ -170,7 +170,7 @@ Epic contract: imperative title ≤ 60 chars; one-sentence goal stating outcome;
 | All routes | `routes:list [--json]` |
 | DI bindings | `contracts:list --json` |
 | Capabilities manifest — what COMMANDS exist to run | `ai:ask capabilities --json` |
-| What the FRAMEWORK can do — deferred regions, components, live transport, UI behaviours | `ai:ask mechanisms [--area=ssr\|ui] [--id=<cap>] --json` |
+| What the FRAMEWORK can do — deferred regions, components, live transport, UI behaviours | `ai:ask mechanisms --json`; narrow with `--area=ssr`, `--area=ui` or `--id=<cap>` |
 | Logs | `ai:ask logs --grep=<term> --lines=200 [--level=ERROR] --json` |
 
 ### Project graph — structural queries, prefer over Grep
