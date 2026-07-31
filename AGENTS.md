@@ -12,17 +12,52 @@ The **agent** is the reasoning system (Claude, Codex, Copilot). **Semitexa** is 
 
 1. **Keep your identity.** "I'll use Semitexa to…" ✅ — "As Semitexa…" ❌. Never claim to *be* Semitexa.
 2. **Triage intent before action.** Classify every input as `EXECUTE` / `CAPTURE` / `REFINE`. Never execute what was only proposed.
-3. **Never solve a non-trivial task in a single pass.** Decompose via `ai:epic` + `ai:work`.
+3. **Decompose work that will outlive your context.** Via `ai:epic` + `ai:work`.
+   - *Does not apply* to work that fits one sitting and carries no branching decisions: a
+     focused fix, a rename, a single test. Opening an epic for it produces notes nobody
+     writes properly, and ceremony nobody trusts is worse than none.
+   - *Does apply* the moment the work is long enough to lose its own context, involves a
+     decision you would otherwise re-litigate, or spans more than one repository. Context
+     compaction inside a **single** session is the common case — the notes are what survive
+     it, and they are read by you, later, not by an auditor.
 4. **Externalize state.** `ai:epic` / `ai:work` / `ai:trace` are the memory. If it's not in an artifact, it didn't happen.
    - **4a — A workaround for a framework defect is half the work.** Directive 4 stops at the project boundary — a consumer's `ai:epic` is never seen by Semitexa. When you work around a Semitexa bug, filing it with `ai:report` is part of the task, not an optional extra. An unrecorded workaround makes the system *look* healthy and guarantees the next agent pays the same cost. Evidence is mandatory: a suspicion without a command and its output is usually your own mistake, not a framework defect.
 5. **Epics are the canonical backlog.** Repository documents are never the source of truth.
 6. **Never re-derive what is already written.** Search trace / epic / context before reasoning from scratch.
 7. **Fail early on uncertainty.** Low confidence → clarify. Ambiguous → branch. Don't guess.
 8. **Minimize context.** Prefer summaries over raw reads; every read answers a question an artifact could not.
+   - *Does not apply* when you need the bytes: an edit must match exactly, so a summary of a
+     file you are about to change is not a cheaper read — it is a guess.
 9. **Name the tool you use.** Say which `ai:*` / `make:*` command ran and why.
 10. **Verify every write.** `ai:verify` is non-negotiable after any edit. Three consecutive failures → stop, escalate.
+    - *Cadence, not per-keystroke*: a run of edits that only makes sense together is verified
+      once, when it is coherent. Verifying mid-sequence reports failures you are about to fix
+      anyway, and the cost is real — see §4 on not wrapping it in `server:restart`.
 
-Violating any is a defect.
+Violating any is a defect. Where a directive names its own exception, applying that exception
+is not a violation — it is the rule working. A rule that has to be broken regularly and
+silently teaches that the whole list is negotiable.
+
+---
+
+## 0a. When the layers disagree
+
+Instructions arrive in layers, and they will not always agree in emphasis. Arbitrate in this
+order rather than deciding afresh each time:
+
+1. **The operator, in this conversation.** A direct instruction wins over every document. If it
+   contradicts a Hard Guard (§7), say so once and let them decide — do not silently comply and do
+   not silently refuse.
+2. **`AGENTS.md`** — this file. The operating rules.
+3. **`AGENTS_DOCTRINE.md`** — the same rules with the flows spelled out. Where it seems to
+   contradict this file, it is elaborating, not overruling; if it truly conflicts, this file wins
+   and the conflict is a defect worth reporting.
+4. **`next_command` hints** from a command's own envelope — situational and usually right about
+   the immediate next step, but they do not override a rule.
+5. **Memory files** — what was true when written. Verify anything they assert about the code
+   before acting on it; a memory naming a file or flag is a lead, not a fact.
+
+`CLAUDE.md` sits above this file only in telling you to read it.
 
 ---
 
@@ -62,6 +97,11 @@ operator input
 [6] ai:plan --files
      │ └─ risk=high → split; back to [3]
      ▼
+[6b] touching a page, a region, a form or an interaction?
+     │   ai:ask mechanisms --json          (narrow with --area=ssr or --area=ui)
+     │   └─ the framework already does deferred regions, components, live
+     │      transport and UI behaviours. Check BEFORE hand-rolling one.
+     ▼
 [7] edit via make:* or Edit
 [8] ai:verify
      │ └─ fail → ai:work update --status=blocked; iterate (three-strike rule)
@@ -88,7 +128,14 @@ Name every command. Summarize NDJSON — never dump it.
 - Any cross-cutting concern
 - > 30 min of agent work, or more than one verb in the request
 
-When in doubt: **epic**.
+When in doubt: **epic** — but doubt is the test, not habit. If none of the Epic conditions holds
+and you are reaching for one anyway, you are performing the process rather than using it.
+
+**What the notes are for.** Not an audit trail. They are what you read after your own context is
+compacted — the decision you already made and would otherwise re-litigate, the hypothesis you
+already disproved, the number you already measured. Write them for yourself in an hour, and the
+test of a good `next-step` is whether it would restart the work cold. Notes written for a
+reviewer are the ones that turn out empty.
 
 Epic contract: imperative title ≤ 60 chars; one-sentence goal stating outcome; ≥ 1 `ai:work` task with `recipe` + `risk` + ≥ 1 `context-ref` + `next-step`; prerequisites first, verification last; no task > ~4k tokens.
 
@@ -122,7 +169,8 @@ Epic contract: imperative title ≤ 60 chars; one-sentence goal stating outcome;
 | Events + listeners | `ai:ask event [--name=<Event>] --json` |
 | All routes | `routes:list [--json]` |
 | DI bindings | `contracts:list --json` |
-| Capabilities manifest | `ai:ask capabilities --json` |
+| Capabilities manifest — what COMMANDS exist to run | `ai:ask capabilities --json` |
+| What the FRAMEWORK can do — deferred regions, components, live transport, UI behaviours | `ai:ask mechanisms --json`; narrow with `--area=ssr`, `--area=ui` or `--id=<cap>` |
 | Logs | `ai:ask logs --grep=<term> --lines=200 [--level=ERROR] --json` |
 
 ### Project graph — structural queries, prefer over Grep
@@ -148,6 +196,10 @@ Accepts raw FQCN or node id.
 | `make:*` | Generators — **dry-run by default**, `--write` commits. Prefer `make:page` over three `make:payload/handler/resource` calls. Generated files carry `/** @generated by 'semitexa make:X' */`. | New payload / handler / resource / module / service / contract / event-listener / command |
 | `lint:handlers` | Handler signature validity | After modifying handlers |
 | `lint:di` | DI injection validity | After changing service wiring |
+
+| `server:restart` | Reload the RUNNING server (~16s) | **Only** before exercising it — browser, curl, E2E. Workers cache discovered classes and compiled templates for their lifetime. |
+
+**`ai:verify` does NOT need a restart.** Every check runs in a fresh CLI process that rediscovers from disk, so a file saved a second ago is already visible. Wrapping verification in `server:restart` costs ~16s around ~4s of actual work — four fifths of the cycle, for nothing. The envelope says so in `restart`.
 
 **Most `ai:*` commands emit `next_command: [{cmd, args, why}]`** in their JSON envelope — **follow the graph, don't memorize the tool list.**
 
@@ -181,6 +233,9 @@ If an idea isn't in `ai:epic`, it doesn't exist from a backlog standpoint. The f
 ## 6. Context Minimization
 
 - **One-read rule.** Each file is read ≤ once per task. Next time: read the trace, not the file.
+  - *Re-read when the bytes changed or must match*: after your own edit, and before an edit
+    that has to line up exactly with existing text. A stale memory of a file is not context
+    minimization, it is a wrong edit waiting to happen.
 - **Hierarchy of truth** — stop at first answer:
   1. Current-turn tool output
   2. `ai:orient` / `ai:work show` / `ai:trace show`
