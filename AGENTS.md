@@ -263,7 +263,7 @@ If an idea isn't in `ai:epic`, it doesn't exist from a backlog standpoint. The f
 - Do **not** create placeholder epics/tasks (`ep-a`, title `test`/`tmp`/`foo`). Push back for real id / title / goal.
 - Do **not** hard-delete epics/tasks. Retirement is `status=discarded`. `var/ai-work/` stays append-only.
 - Do **not** render the backlog without a stated scope.
-- `packages/semitexa-docs/` is the single official documentation source; `packages/<pkg>/docs/` is canonical package-local; `var/docs/` is scratch. Root-level `./docs/` is **not** official.
+- `packages/semitexa-docs/` is the single official documentation source — for framework *and* package behaviour alike. A package keeps only `README.md`, `CHANGELOG.md` and `docs/MODULE_STRUCTURE.md` (spec configuration, not prose); do **not** start a `docs/` tree in a package. `var/docs/` is scratch. Root-level `./docs/` is **not** official.
 - **Every temporary / generated `.md`** — planning notes, audits, analysis, reports, remediation plans, design drafts — goes in **`var/docs/`**, never in project root. Project root holds only the framework scaffold docs: `AGENTS.md`, `AGENTS_DOCTRINE.md`, `AI_ENTRY.md`, `AI_CONTEXT.md`, `AI_REFERENCE.md`, `CLAUDE.md`, `README.md`, `AI_NOTES.md`. If the operator asks for a report, write it to `var/docs/<slug>.md` and cite that path — never dump a fresh top-level `.md`.
 
 ---

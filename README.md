@@ -63,13 +63,12 @@ Official framework documentation lives in `packages/semitexa-docs/`. Package-lev
 | **Attributes** — AsPayload, AsPayloadHandler, AsResource, etc. | [vendor/semitexa/core/docs/attributes/README.md](vendor/semitexa/core/docs/attributes/README.md) |
 | **Service contracts** — contracts:list, active implementation | [vendor/semitexa/core/docs/SERVICE_CONTRACTS.md](vendor/semitexa/core/docs/SERVICE_CONTRACTS.md) |
 
-The repository does not treat a root-level `./docs/` directory as canonical. Project-level AI guidance lives at root (`AGENTS.md`, `AI_ENTRY.md`, `AI_CONTEXT.md`, `AI_NOTES.md`); framework guidance lives in `packages/semitexa-docs/`; per-package reference lives in `packages/<package>/docs/`.
+The repository does not treat a root-level `./docs/` directory as canonical. Project-level AI guidance lives at root (`AGENTS.md`, `AI_ENTRY.md`, `AI_CONTEXT.md`, `AI_NOTES.md`); everything about the framework — including per-package behaviour — lives in `packages/semitexa-docs/`.
 
 ## Structure
 
 - `src/modules/` – your application modules (add new pages and endpoints here). New routes only in modules.
-- `packages/semitexa-docs/` – official Semitexa framework and workspace documentation.
-- `packages/<package>/docs/` – per-package canonical reference.
+- `packages/semitexa-docs/` – official Semitexa documentation: framework, workspace and per-package reference alike.
 - `var/docs/` – working directory for notes, drafts, research, and remediation reports; not canonical.
 - `AI_ENTRY.md`, `AI_CONTEXT.md`, `AGENTS.md` – AI entrypoints and rules at project root; `AI_NOTES.md` is your notes (never overwritten).
 
