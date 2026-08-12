@@ -58,10 +58,10 @@ Official framework documentation lives in `packages/semitexa-docs/`. Package-lev
 | **AI context for this project** | [AI_CONTEXT.md](AI_CONTEXT.md) |
 | **Framework docs hub** | [packages/semitexa-docs/docs/README.md](packages/semitexa-docs/docs/README.md) |
 | **Workspace / monorepo docs** — architecture, DI, PHPStan, testing, policy | [packages/semitexa-docs/docs/workspace/README.md](packages/semitexa-docs/docs/workspace/README.md) |
-| **Running the app** — Docker, ports, logs | [vendor/semitexa/core/docs/RUNNING.md](vendor/semitexa/core/docs/RUNNING.md) |
-| **Adding pages and routes** — modules, Request/Handler | [vendor/semitexa/core/docs/ADDING_ROUTES.md](vendor/semitexa/core/docs/ADDING_ROUTES.md) |
-| **Attributes** — AsPublicPayload, AsPayloadHandler, AsResource, etc. | [vendor/semitexa/docs/docs/en/reference/attributes-core.md](vendor/semitexa/docs/docs/en/reference/attributes-core.md) — generated from the attribute classes |
-| **Service contracts** — contracts:list, active implementation | [vendor/semitexa/core/docs/SERVICE_CONTRACTS.md](vendor/semitexa/core/docs/SERVICE_CONTRACTS.md) |
+| **Running the app** — Docker, ports, logs | [/docs/get-started/installation](https://semitexa.com/docs/get-started/installation) |
+| **Adding pages and routes** — modules, Request/Handler | [/docs/routing/adding-routes](https://semitexa.com/docs/routing/adding-routes) |
+| **Attributes** — AsPublicPayload, AsPayloadHandler, AsResource, etc. | [/docs/reference/attributes-core](https://semitexa.com/docs/reference/attributes-core) — generated from the attribute classes |
+| **Service contracts** — contracts:list, active implementation | [/docs/di/contract-resolution](https://semitexa.com/docs/di/contract-resolution) |
 
 The repository does not treat a root-level `./docs/` directory as canonical. Project-level AI guidance lives at root (`AGENTS.md`, `AI_ENTRY.md`, `AI_CONTEXT.md`, `AI_NOTES.md`); everything about the framework — including per-package behaviour — lives in `packages/semitexa-docs/`.
 
