@@ -22,15 +22,15 @@
         "semitexa/authorization": "2026.08.04.2028",
         "semitexa/rbac": "2026.08.04.2028",
         "semitexa/api": "2026.08.04.2028",
-        "semitexa/webhooks": "2026.08.04.2028",
+        "semitexa/webhooks": "2026.08.19.1426",
         "semitexa/workflow": "2026.08.04.2028",
         "semitexa/cache": "2026.08.04.2028",
         "semitexa/storage": "2026.08.04.2028",
-        "semitexa/ssr": "2026.08.19.0649",
-        "semitexa/dev": "2026.08.19.0649",
+        "semitexa/ssr": "2026.08.19.1426",
+        "semitexa/dev": "2026.08.19.1426",
         "semitexa/tenancy": "2026.08.04.2028",
         "semitexa/locale": "2026.08.04.2028",
-        "semitexa/orm": "2026.08.12.0606",
+        "semitexa/orm": "2026.08.19.1426",
         "semitexa/search": "2026.08.04.2028",
         "semitexa/mail": "2026.08.04.2028",
         "semitexa/media": "2026.08.04.2028",
@@ -44,7 +44,7 @@
         "semitexa/platform-settings": "2026.08.04.2028"
     },
     "require-dev": {
-        "semitexa/testing": "2026.08.04.2028"
+        "semitexa/testing": "2026.08.19.1426"
     },
     "keywords": [
         "semitexa",
