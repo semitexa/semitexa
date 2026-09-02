@@ -2268,10 +2268,17 @@ ${_url_clean}/tests"
         # An explicit command to `compose run` overrides the phpunit service
         # command, so the env-gated Swoole blocking-detection flags from
         # docker-compose.test.yml must be repeated here or they are bypassed.
+        #
+        # pcov.enabled goes HERE, before vendor/bin/phpunit, because everything after that
+        # is an argument to PHPUnit rather than to PHP. Without this the shipped PCOV
+        # cannot be switched on through the canonical runner at all, and a coverage run
+        # fails with "No code coverage driver available":
+        #     SEMITEXA_COVERAGE=1 bin/semitexa test:run <paths> --coverage-text
         # shellcheck disable=SC2086
         $_compose $_overlays run --rm phpunit \
             php -d "swoole.blocking_detection=${SWOOLE_BLOCKING_DETECTION:-Off}" \
                 -d "swoole.blocking_threshold=${SWOOLE_BLOCKING_THRESHOLD:-100000}" \
+                -d "pcov.enabled=${SEMITEXA_COVERAGE:-0}" \
                 vendor/bin/phpunit "$@" $_test_paths
     ) || _phpunit_rc=$?
 
