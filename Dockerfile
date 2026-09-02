@@ -8,10 +8,17 @@
 # a large suite. Enabled by default it would make every ordinary test run pay for
 # coverage nobody asked for.
 #
-# directory and initial.files are set explicitly rather than left to PCOV's
-# defaults, because those defaults FAIL SILENTLY on a project of any size: an
-# empty pcov.directory with initial.files=64 produces a clean run reporting 0.00%
-# over thousands of classes, with no error and no warning.
+# pcov.directory is the COLLECTION BOUNDARY and it is the setting that matters:
+# left empty, PCOV records nothing and a run completes cleanly reporting 0.00% over
+# thousands of classes, with no error and no warning. Isolated by measurement -
+# with the directory set, coverage works even at the default initial.files=64;
+# with it empty, no value of initial.files helps.
+#
+# pcov.initial.files only sizes PCOV's internal table up front, so a large suite
+# does not reallocate while collecting. It has no effect on WHAT is covered.
+#
+# vendor/ and tests are excluded so the table is not filled with files no coverage
+# report is about.
 FROM php:8.4-cli-alpine
 
 # Install Composer from official image (multi-stage, no extra dependencies)
@@ -32,7 +39,7 @@ RUN apk add --no-cache autoconf g++ make linux-headers openssl-dev git unzip ima
     && docker-php-ext-enable imagick \
     && pecl install pcov \
     && docker-php-ext-enable pcov \
-    && printf 'pcov.enabled=0\npcov.directory=/var/www/html\npcov.initial.files=20000\n' > /usr/local/etc/php/conf.d/zz-pcov.ini \
+    && printf 'pcov.enabled=0\npcov.directory=/var/www/html\npcov.exclude="~(vendor|/tests/)~"\npcov.initial.files=20000\n' > /usr/local/etc/php/conf.d/zz-pcov.ini \
     && addgroup -g 1000 -S semitexa \
     && adduser -u 1000 -S -G semitexa -h /var/www/html semitexa
 
