@@ -15,7 +15,7 @@
     },
     "require": {
         "php": "^8.4",
-        "semitexa/core": "2026.09.03.1906",
+        "semitexa/core": "2026.09.04.0512",
         "semitexa/update": "2026.09.02.0604",
         "semitexa/docs": "2026.09.03.1906",
         "semitexa/auth": "2026.08.04.2028",
@@ -27,7 +27,7 @@
         "semitexa/cache": "2026.08.04.2028",
         "semitexa/storage": "2026.08.04.2028",
         "semitexa/ssr": "2026.09.03.1906",
-        "semitexa/dev": "2026.09.03.1906",
+        "semitexa/dev": "2026.09.04.0512",
         "semitexa/tenancy": "2026.09.02.0604",
         "semitexa/locale": "2026.08.04.2028",
         "semitexa/orm": "2026.09.02.1513",
