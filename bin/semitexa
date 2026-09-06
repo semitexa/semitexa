@@ -1991,22 +1991,41 @@ host_load1() {
     awk '{ printf "%s", $1; exit }' /proc/loadavg
 }
 
+# The docker output is captured BEFORE it is counted. Piping straight into awk
+# discards docker's exit status, so a daemon that is not running produced a
+# confident "0 competing compose projects" — an unreadable probe reported as an
+# idle host, which is the exact failure this whole report exists to prevent.
 host_compose_projects() {
-    docker ps --filter label=com.docker.compose.project \
-        --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null \
-        | sort -u | awk 'NF { n++ } END { printf "%d", n + 0 }'
+    _hc_out="$(docker ps --filter label=com.docker.compose.project \
+        --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null)" || return 1
+
+    printf '%s' "$_hc_out" | sort -u | awk 'NF { n++ } END { printf "%d", n + 0 }'
 }
 
-# Prints the host's headroom. Returns non-zero ONLY when memory is readable
-# and below the threshold, so the caller can decide whether that is fatal.
+# Prints the host's headroom. Returns non-zero when memory is readable and below
+# the threshold, and ALSO when the threshold itself is misconfigured, so the
+# caller's opt-in refusal fails closed rather than open.
 report_host_headroom() {
     _hh_avail=""
     _hh_load=""
     _hh_projects=""
     _hh_avail="$(host_avail_mb 2>/dev/null)" || _hh_avail=""
     _hh_load="$(host_load1 2>/dev/null)" || _hh_load=""
-    _hh_projects="$(host_compose_projects)"
+    _hh_projects="$(host_compose_projects)" || _hh_projects=""
     _hh_min="${SEMITEXA_E2E_MIN_AVAIL_MB:-2048}"
+
+    # A threshold that is not a whole number of megabytes silently disables the
+    # gate: `[ 512 -lt bad ]` fails, its stderr is discarded, and the false
+    # branch reads as "there is room" — so SEMITEXA_E2E_REQUIRE_HEADROOM=1 would
+    # let E2E start on a host with 512 MB free. Refused as a configuration
+    # error instead, and the non-zero return means the opt-in refusal still
+    # fires.
+    case "$_hh_min" in
+        ''|*[!0-9]*)
+            error "SEMITEXA_E2E_MIN_AVAIL_MB must be a whole number of megabytes; got '${_hh_min}'."
+            return 1
+            ;;
+    esac
 
     if [ -z "$_hh_avail" ]; then
         # Unreadable is NOT the same as fine. A headroom report that prints
@@ -2019,9 +2038,15 @@ report_host_headroom() {
 
     printf "  %-30s %s MB\n"  "Host memory available" "$_hh_avail"
     printf "  %-30s %s\n"     "Host load (1 min)"     "${_hh_load:-unknown}"
-    printf "  %-30s %s\n"     "Competing compose projects" "$_hh_projects"
+    printf "  %-30s %s\n"     "Competing compose projects" "${_hh_projects:-unknown}"
 
-    if [ "$_hh_avail" -lt "$_hh_min" ] 2>/dev/null; then
+    # Each unreadable probe says so. The same rule as the memory branch above,
+    # applied to the two that were left reporting a plausible-looking value:
+    # 'unknown' in a table is easy to skim past, a warning is not.
+    [ -z "$_hh_load" ] && warn "Host load is UNREADABLE (no /proc/loadavg); that column is not evidence."
+    [ -z "$_hh_projects" ] && warn "Competing compose projects UNREADABLE (docker ps failed); that column is not evidence."
+
+    if [ "$_hh_avail" -lt "$_hh_min" ]; then
         warn "Only ${_hh_avail} MB available (below ${_hh_min} MB)."
         warn "E2E failures on this host at this headroom have been measured as CONTENTION, not code:"
         warn "  page.goto TimeoutError at 15000ms, different specs failing on each run of one tree."
