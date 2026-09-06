@@ -1968,6 +1968,95 @@ discover_e2e_dirs() {
     fi
 }
 
+# ── Host headroom, observed alongside the E2E verdict ──────────────────────
+#
+# E2E on a loaded dev host is non-deterministic in a way that reads exactly
+# like a code regression. MEASURED: an identical tree produced 17 failures,
+# then 15 with DIFFERENT membership, 11 of those 15 being `page.goto`
+# TimeoutError at 15000ms — with ~1 GB of host memory available and 20
+# competing compose projects. The same suite, same host, same commit, with
+# ~11 GB available: 88 specs in 47.2s, zero failures.
+#
+# Playwright retries stay at 0 on purpose. Retrying would convert the signal
+# into a slower green and hide the cause. What was missing is not resilience
+# but the CONTEXT to judge a red run, so the numbers are printed next to the
+# verdict — before the run, and again when it fails.
+host_avail_mb() {
+    [ -r /proc/meminfo ] || return 1
+    awk '/^MemAvailable:/ { printf "%d", $2 / 1024; found = 1; exit } END { exit !found }' /proc/meminfo
+}
+
+host_load1() {
+    [ -r /proc/loadavg ] || return 1
+    awk '{ printf "%s", $1; exit }' /proc/loadavg
+}
+
+# The docker output is captured BEFORE it is counted. Piping straight into awk
+# discards docker's exit status, so a daemon that is not running produced a
+# confident "0 competing compose projects" — an unreadable probe reported as an
+# idle host, which is the exact failure this whole report exists to prevent.
+host_compose_projects() {
+    _hc_out="$(docker ps --filter label=com.docker.compose.project \
+        --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null)" || return 1
+
+    printf '%s' "$_hc_out" | sort -u | awk 'NF { n++ } END { printf "%d", n + 0 }'
+}
+
+# Prints the host's headroom. Returns non-zero when memory is readable and below
+# the threshold, and ALSO when the threshold itself is misconfigured, so the
+# caller's opt-in refusal fails closed rather than open.
+report_host_headroom() {
+    _hh_avail=""
+    _hh_load=""
+    _hh_projects=""
+    _hh_avail="$(host_avail_mb 2>/dev/null)" || _hh_avail=""
+    _hh_load="$(host_load1 2>/dev/null)" || _hh_load=""
+    _hh_projects="$(host_compose_projects)" || _hh_projects=""
+    _hh_min="${SEMITEXA_E2E_MIN_AVAIL_MB:-2048}"
+
+    # A threshold that is not a whole number of megabytes silently disables the
+    # gate: `[ 512 -lt bad ]` fails, its stderr is discarded, and the false
+    # branch reads as "there is room" — so SEMITEXA_E2E_REQUIRE_HEADROOM=1 would
+    # let E2E start on a host with 512 MB free. Refused as a configuration
+    # error instead, and the non-zero return means the opt-in refusal still
+    # fires.
+    case "$_hh_min" in
+        ''|*[!0-9]*)
+            error "SEMITEXA_E2E_MIN_AVAIL_MB must be a whole number of megabytes; got '${_hh_min}'."
+            return 1
+            ;;
+    esac
+
+    if [ -z "$_hh_avail" ]; then
+        # Unreadable is NOT the same as fine. A headroom report that prints
+        # nothing looks identical to a host with room to spare, and that is
+        # the whole failure this exists to prevent.
+        warn "Host headroom: UNREADABLE (no /proc/meminfo on this platform)."
+        warn "A red E2E run here cannot be attributed to the host or to the code."
+        return 0
+    fi
+
+    printf "  %-30s %s MB\n"  "Host memory available" "$_hh_avail"
+    printf "  %-30s %s\n"     "Host load (1 min)"     "${_hh_load:-unknown}"
+    printf "  %-30s %s\n"     "Competing compose projects" "${_hh_projects:-unknown}"
+
+    # Each unreadable probe says so. The same rule as the memory branch above,
+    # applied to the two that were left reporting a plausible-looking value:
+    # 'unknown' in a table is easy to skim past, a warning is not.
+    [ -z "$_hh_load" ] && warn "Host load is UNREADABLE (no /proc/loadavg); that column is not evidence."
+    [ -z "$_hh_projects" ] && warn "Competing compose projects UNREADABLE (docker ps failed); that column is not evidence."
+
+    if [ "$_hh_avail" -lt "$_hh_min" ]; then
+        warn "Only ${_hh_avail} MB available (below ${_hh_min} MB)."
+        warn "E2E failures on this host at this headroom have been measured as CONTENTION, not code:"
+        warn "  page.goto TimeoutError at 15000ms, different specs failing on each run of one tree."
+        warn "Judge a red run accordingly, or free memory and re-run before filing anything."
+        return 1
+    fi
+
+    return 0
+}
+
 cmd_test_run() {
     if ! has_compose; then
         error "Docker Compose is required. Install Docker Desktop or docker-compose."
@@ -2321,6 +2410,16 @@ ${_url_clean}/tests"
     info "Discovered E2E spec dirs: $(printf '%s' "$_e2e_dirs" | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')"
     info "E2E baseURL: ${PLAYWRIGHT_BASE_URL:-http://localhost:9502 (default; runner shares app netns)}"
 
+    _headroom_rc=0
+    report_host_headroom || _headroom_rc=$?
+    # Refusal is opt-in and enabled ONLY by an exact "1", so that a well-meant
+    # SEMITEXA_E2E_REQUIRE_HEADROOM=true or =yes cannot silently mean "off".
+    if [ "$_headroom_rc" -ne 0 ] && [ "${SEMITEXA_E2E_REQUIRE_HEADROOM:-0}" = "1" ]; then
+        error "Refusing to start E2E below the memory threshold (SEMITEXA_E2E_REQUIRE_HEADROOM=1)."
+        info "Free memory, lower SEMITEXA_E2E_MIN_AVAIL_MB, or unset SEMITEXA_E2E_REQUIRE_HEADROOM."
+        exit 1
+    fi
+
     _app_rc=0
     (
         env_export_compose_context
@@ -2351,6 +2450,11 @@ ${_url_clean}/tests"
     if [ "$_e2e_rc" -ne 0 ]; then
         printf "\n"
         error "E2E phase failed (exit $_e2e_rc)."
+        # Re-read rather than reuse the pre-run numbers: the run itself is what
+        # consumed the memory, so the state at the moment of failure is the one
+        # worth reporting.
+        printf "\n%sHost at the moment of failure:%s\n" "$C_BOLD" "$C_RESET"
+        report_host_headroom || true
         exit "$_e2e_rc"
     fi
     success "E2E phase passed."
