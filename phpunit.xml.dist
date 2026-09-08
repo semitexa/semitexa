@@ -1,16 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    PHPUnit configuration for a Semitexa project.
+
+    The canonical runner is `bin/semitexa test:run`, which discovers every
+    tests/ directory on disk (this project's own, plus src/modules/<Name>/tests)
+    and passes them to PHPUnit as POSITIONAL arguments — those override the
+    <testsuite> below. It is kept anyway so a bare `vendor/bin/phpunit` does
+    something sensible rather than nothing.
+-->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="vendor/semitexa/testing/bootstrap/phpunit.php"
          colors="true">
+    <!--
+        NOT vendor/autoload.php. Local modules live at src/modules/<Name>/src and
+        are excluded from the classmap on purpose, so Composer alone cannot load
+        them: the PSR-4 mappings are registered at runtime, and for tests that is
+        what this bootstrap does. With the plain autoloader every suite touching
+        a module class dies on "Class ... not found" before running an assertion.
+    -->
     <testsuites>
         <testsuite name="default">
-            <directory>packages</directory>
+            <directory>tests</directory>
         </testsuite>
     </testsuites>
     <source>
         <include>
             <directory>src</directory>
         </include>
+        <!-- Tests are exercised, not covered; counting them inflates every figure. -->
+        <exclude>
+            <directory>src/modules/*/tests</directory>
+        </exclude>
     </source>
 </phpunit>
