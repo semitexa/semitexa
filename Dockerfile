@@ -26,7 +26,12 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
 ARG IMAGICK_VERSION=3.8.1
 
-RUN apk add --no-cache autoconf g++ make linux-headers openssl-dev git unzip imagemagick-dev imagemagick-webp imagemagick-jpeg imagemagick-heic \
+# bash, on an image whose default shell is BusyBox ash: semitexa/update ships
+# its deploy tooling as bash scripts (tools/run-auto-deploy-systemd.sh and its
+# installer both declare `#!/usr/bin/env bash`), and the suite that covers them
+# runs in this image. Without it those tests fail as `sh: bash: not found`,
+# which reads like a broken test rather than a missing package.
+RUN apk add --no-cache autoconf g++ make linux-headers openssl-dev git unzip imagemagick-dev imagemagick-webp imagemagick-jpeg imagemagick-heic bash \
     && docker-php-ext-install pdo pdo_mysql sockets \
     && pecl install --nobuild swoole \
     && cd "$(pecl config-get temp_dir)/swoole" \
