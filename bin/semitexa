@@ -2333,6 +2333,21 @@ ${_url_clean}/tests"
     # Deliberately NO --allow-destructive: stale tables in the test DB are
     # left in place (they don't fail tests); destructive cleanup is an
     # operator decision, never an automatic side effect of running tests.
+    # The test database is separated from the live one by a DEFAULT
+    # (DB_TEST_DATABASE, default semitexa_test), and a default is not a
+    # guarantee: point that variable at DB_DATABASE and everything below —
+    # schema sync now, the suites after it — runs against the database the
+    # developer actually works in. Nothing downstream can tell the difference,
+    # so the check belongs here, before the first write.
+    _live_db="$(env_val DB_DATABASE semitexa)"
+    _test_db="${DB_TEST_DATABASE:-$(env_val DB_TEST_DATABASE semitexa_test)}"
+    if [ "$_test_db" = "$_live_db" ]; then
+        error "DB_TEST_DATABASE and DB_DATABASE are both '$_live_db'."
+        error "Tests create and drop tables; running them against the live database would destroy it."
+        error "Set DB_TEST_DATABASE to a separate name (the default is semitexa_test)."
+        exit 1
+    fi
+
     _sync_rc=0
     info "Test-DB schema parity: orm:sync against the test database (safe ops only)..."
     (
